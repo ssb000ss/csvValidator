@@ -50,7 +50,15 @@ coverage.xml
 
 # IDEs and editors
 .vscode/
-.idea/
+# Commit shareable .idea configs; ignore volatile files only
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/shelf/
+.idea/httpRequests/
+.idea/dataSources/
+.idea/dataSources.local.xml
+.idea/usage.statistics.xml
+.idea/sshConfigs.xml
 *.swp
 *.swo
 
