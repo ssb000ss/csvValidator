@@ -75,3 +75,23 @@ Icon?
 bad/
 export/
 data/
+
+# Local environment overrides
+.env
+
+
+# --- Additional ignores (project hygiene) ---
+# JetBrains IDE
+.idea/
+# JetBrains module files
+*.iml
+
+# Streamlit local config
+.streamlit/
+
+# Windows OS files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
