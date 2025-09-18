@@ -152,7 +152,47 @@ def analyze_csv_stats(file_path: Path, encoding: str, max_lines: int = 10000, pr
             except Exception:
                 continue
         if not results:
-            raise ValueError("Не удалось вычислить статистику колонок")
+            # Фолбэк: попробуем выбрать разделитель по частоте вхождений и вернуть консервативные оценки
+            try:
+                if lines:
+                    # Обновим freq_counts если пустой
+                    if not freq_counts:
+                        for d in candidates:
+                            try:
+                                freq_counts[d] = sum(line.count(d) for line in lines) / max(1, len(lines))
+                            except Exception:
+                                freq_counts[d] = 0.0
+                    # Выбираем разделитель с максимальной средней частотой
+                    best_d = max(freq_counts.items(), key=lambda kv: kv[1])[0] if freq_counts else ','
+                    # Пытаемся распарсить ещё раз аккуратно
+                    try:
+                        reader = csv.reader(_io.StringIO(sample_text), delimiter=best_d, quoting=csv.QUOTE_MINIMAL)
+                        lengths = [len(row) for row in reader]
+                    except Exception:
+                        # Грубая оценка: по split
+                        lengths = [len(line.split(best_d)) for line in lines]
+                    if not lengths:
+                        lengths = [1]
+                    header_cols = lengths[0]
+                    data_lengths = lengths[1:] if len(lengths) > 1 else []
+                    if data_lengths:
+                        from collections import Counter
+                        cnt = Counter(data_lengths)
+                        modal_cols, modal_count = max(cnt.items(), key=lambda kv: (kv[1], kv[0]))
+                        modal_share = modal_count / max(1, len(data_lengths))
+                    else:
+                        modal_cols, modal_count, modal_share = header_cols, 0, 1.0
+                    total_rows_local = len(lengths)
+                    logger.warning("⚠️ Статистика не определена стандартным способом, используем частотный фолбэк")
+                    return best_d, header_cols, modal_cols, total_rows_local, modal_share
+                else:
+                    # Вообще нет строк — файл пустой
+                    logger.warning("⚠️ Пустой файл при анализе статистики; возвращаем консервативные значения")
+                    return ',', 0, 0, 0, 1.0
+            except Exception as _e:
+                # В случае любой неожиданной ошибки — вернуть безопасные значения
+                logger.warning(f"⚠️ Фолбэк статистики завершился с ошибкой: {_e}. Возвращаем значения по умолчанию")
+                return ',', 1, 1, len(lines), 1.0
 
         # Если среди кандидатов есть modal_cols > 1 — игнорируем варианты с 1 колонкой
         max_cols = max(r[1] for r in results)
