@@ -449,8 +449,8 @@ def count_total_lines(path: Path, chunk_size: int = 8 * 1024 * 1024) -> int:
 
 
 # --------- UI ---------
-st.set_page_config(page_title="CSV Cleaner", page_icon="🧹", layout="wide")
-st.title("CSV Cleaner — просто и надёжно")
+st.set_page_config(page_title="csvValidator", page_icon="🧹", layout="wide")
+st.title("csvValidator — просто и надёжно")
 
 # Параметры скрыты: используем значения по умолчанию для простоты и надёжности
 export_delim = "~"
