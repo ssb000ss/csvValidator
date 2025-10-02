@@ -544,7 +544,7 @@ with process_tab:
                 bad_raw_path = BAD_DIR / f"{stem}_bad_{ts}_raw.txt"  # генерится скриптом автоматически
 
                 # 3) Запускаем внешний скрипт на весь файл (с потоковым чтением stdout)
-                script_path = Path(__file__).resolve().parent / "streaming_csv_parser.py"
+                script_path = Path(__file__).resolve().parent / "cli_validate.py"
                 cmd = [
                     sys.executable,
                     str(script_path),
