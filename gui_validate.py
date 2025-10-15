@@ -29,6 +29,7 @@ from config import EXPORT_DIR, BAD_DIR, DATA_DIR, LOGS_DIR
 
 SAMPLE_BYTES = 100_000
 
+
 def get_session_log_path() -> Path:
     if 'log_path' not in st.session_state:
         LOGS_DIR.mkdir(exist_ok=True)
@@ -37,6 +38,7 @@ def get_session_log_path() -> Path:
         fname = f"session_{sid}_{int(time.time())}.log"
         st.session_state['log_path'] = LOGS_DIR / fname
     return st.session_state['log_path']
+
 
 def write_log(msg: str) -> None:
     path = get_session_log_path()
@@ -126,6 +128,7 @@ def read_first_n_lines_bytes(file_like, n: int = 10000, chunk_size: int = 1024 *
         pass
     return data
 
+
 def detect_encoding_and_reset(file_obj) -> str:
     pos = file_obj.tell()
     head = file_obj.read(SAMPLE_BYTES)
@@ -133,7 +136,11 @@ def detect_encoding_and_reset(file_obj) -> str:
         # already text
         file_obj.seek(pos)
         return 'utf-8'
-    enc = chardet.detect(head)["encoding"] or "utf-8"
+    detector = chardet.detect(head)
+    if detector["confidence"] < 0.7:
+        enc = "utf-8"
+    else:
+        enc = detector["encoding"]
     if enc and enc.lower() == 'ascii':
         enc = 'utf-8'
     file_obj.seek(0)
@@ -256,11 +263,11 @@ def analyze_csv_stats_stream(text_stream, max_lines: int = 10000, provided_delim
 
 
 def process_csv_stream(
-    bin_file,
-    export_delimiter: str,
-    input_encoding: Optional[str] = None,
-    input_delimiter: Optional[str] = None,
-    progress_callback=None,
+        bin_file,
+        export_delimiter: str,
+        input_encoding: Optional[str] = None,
+        input_delimiter: Optional[str] = None,
+        progress_callback=None,
 ) -> Tuple[io.BytesIO, io.BytesIO, io.BytesIO, int, int, int]:
     # Detect encoding
     encoding = input_encoding or detect_encoding_and_reset(bin_file)
@@ -568,12 +575,12 @@ with process_tab:
                 # Запуск процесса с построчным чтением stdout
                 t0 = time.time()
                 with subprocess.Popen(
-                    cmd,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.STDOUT,
-                    text=True,
-                    bufsize=1,
-                    universal_newlines=True,
+                        cmd,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.STDOUT,
+                        text=True,
+                        bufsize=1,
+                        universal_newlines=True,
                 ) as proc:
                     status.write("Идёт обработка, логи обновляются в реальном времени…")
                     valid_seen = 0

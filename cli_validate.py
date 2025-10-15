@@ -48,8 +48,10 @@ def detect_encoding(file_path: Path, sample_size: int = 10000) -> str:
         with open(file_path, "rb") as f:
             raw_data = f.read(sample_size)
             result = chardet.detect(raw_data)
-            encoding = result['encoding'] or 'utf-8'
-
+            if result["confidence"] or 0.1 < 0.7:
+                encoding = "utf-8"
+            else:
+                encoding = result['encoding'] or 'utf-8'
             if encoding.lower() == 'ascii':
                 encoding = 'utf-8'
 
@@ -268,7 +270,8 @@ def process_csv_streaming(input_path: Path, output_path: Path, bad_path: Path,
                     expected_columns_local = header_cols
                 else:
                     expected_columns_local = expected_columns
-                logger.info(f"📋 Заголовок: {header_cols} столбцов; используем expected_columns={expected_columns_local}")
+                logger.info(
+                    f"📋 Заголовок: {header_cols} столбцов; используем expected_columns={expected_columns_local}")
                 logger.info(f"🔧 Новый разделитель: {repr(export_delimiter)}")
             except StopIteration:
                 logger.error("❌ Файл пустой или не содержит заголовок")
@@ -331,7 +334,8 @@ def process_csv_streaming(input_path: Path, output_path: Path, bad_path: Path,
                             else:
                                 desc = (
                                     f"Неверное количество столбцов: {bad_len} вместо {expected_columns_local}"
-                                    if isinstance(bad_len, int) else f"Неверная строка (ожидалось {expected_columns_local} столбцов)"
+                                    if isinstance(bad_len,
+                                                  int) else f"Неверная строка (ожидалось {expected_columns_local} столбцов)"
                                 )
                             bad_writer.writerow([phys_line_no, "Ошибка_структуры", desc, content])
                             # В файл сырых ошибок пишем строку без изменений
@@ -350,7 +354,8 @@ def process_csv_streaming(input_path: Path, output_path: Path, bad_path: Path,
                             bad_len = (len(row) if row is not None else '—')
                             desc = (
                                 f"Неверное количество столбцов: {bad_len} вместо {expected_columns_local}"
-                                if isinstance(bad_len, int) else f"Неверная строка (ожидалось {expected_columns_local} столбцов)"
+                                if isinstance(bad_len,
+                                              int) else f"Неверная строка (ожидалось {expected_columns_local} столбцов)"
                             )
                         bad_writer.writerow([phys_line_no, "Ошибка_структуры", desc, content])
                         # В файл сырых ошибок пишем строку без изменений
@@ -363,7 +368,8 @@ def process_csv_streaming(input_path: Path, output_path: Path, bad_path: Path,
                 except Exception as e:
                     # Ошибка при обработке
                     error_desc = f"Ошибка обработки: {str(e)[:100]}"
-                    bad_writer.writerow([phys_line_no, "Ошибка_обработки", error_desc, (cur_line.rstrip('\r\n') if 'cur_line' in locals() else '')])
+                    bad_writer.writerow([phys_line_no, "Ошибка_обработки", error_desc,
+                                         (cur_line.rstrip('\r\n') if 'cur_line' in locals() else '')])
                     # В файл сырых ошибок пишем исходную строку, если она есть
                     if 'cur_line' in locals():
                         badraw.write(cur_line)
@@ -413,7 +419,8 @@ def main():
         export_delimiter = args.export_delimiter
 
         logger.info(f"🔍 Параметры: encoding={encoding}, входной разделитель={repr(delim)}")
-        logger.info(f"📊 Статистика по первым {total_rows} строкам: header_cols={header_cols}, modal_cols={modal_cols}, modal_share={modal_share:.3f}")
+        logger.info(
+            f"📊 Статистика по первым {total_rows} строкам: header_cols={header_cols}, modal_cols={modal_cols}, modal_share={modal_share:.3f}")
         logger.info(f"🔧 Выходной разделитель: {repr(export_delimiter)}")
         logger.info(f"📁 Размер файла: {input_path.stat().st_size / (1024 * 1024):.1f} MB")
 
@@ -426,7 +433,8 @@ def main():
 
         # Обрабатываем CSV
         valid_count, bad_count = process_csv_streaming(
-            input_path, output_path, bad_path, encoding, delim, export_delimiter, args.batch_size, expected_columns=expected_columns
+            input_path, output_path, bad_path, encoding, delim, export_delimiter, args.batch_size,
+            expected_columns=expected_columns
         )
 
         # Выведем краткую сводку в stdout в стабильном формате для UI
